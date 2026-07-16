@@ -1,0 +1,45 @@
+<div class="toolbar">
+    <div class="search-box">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" placeholder="Buscar producto..." id="searchProducts">
+    </div>
+
+    <select class="filter" id="filterCategory">
+        <option value="">Todas las categorías</option>
+    </select>
+
+    <select id="filterStock">
+        <option value="">Todo el stock</option>
+        <option value="available">Disponible</option>
+        <option value="low">Stock bajo</option>
+        <option value="empty">Agotado</option>
+    </select>
+
+    <button class="app-btn app-btn-primary" onclick="productsView.openAddProduct()">
+        <i class="fas fa-plus"></i> Nuevo
+    </button>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Variantes</th>
+                    <th>Stock total</th>
+                    <th>Precio base</th>
+                    <th>Estado</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="productsTableBody"></tbody>
+        </table>
+    </div>
+    <div id="productsEmpty" class="empty-state" style="display:none;">
+        <i class="fas fa-mask"></i>
+        <span>No hay productos</span>
+    </div>
+</div>

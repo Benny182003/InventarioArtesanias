@@ -1,0 +1,23 @@
+<div class="toolbar d-flex justify-content-end">
+    <button class="app-btn app-btn-primary" onclick="categoriesView.openAddCategory()">
+        <i class="fas fa-plus"></i> Nuevo
+    </button>
+</div>
+<div class="card">
+    <table class="products-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Categoría</th>
+                <th>Descripción</th>
+                <th>Fecha</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="categoriesTableBody"></tbody>
+    </table>
+    <div id="categoriesEmpty" class="empty-state" style="display:none">
+        <i class="fas fa-folder-open"></i>
+        <span>No hay categorías</span>
+    </div>
+</div>

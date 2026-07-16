@@ -1,0 +1,144 @@
+<div class="carnival-strip">
+    <span style="background:#e8622a"></span>
+    <span style="background:#f0a500"></span>
+    <span style="background:#2aa89e"></span>
+    <span style="background:#8e44ad"></span>
+    <span style="background:#e8622a"></span>
+    <span style="background:#f0a500"></span>
+    <span style="background:#2aa89e"></span>
+    <span style="background:#8e44ad"></span>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:var(--success-light);color:var(--success)">
+            <i class="fas fa-box"></i>
+        </div>
+        <div>
+            <div class="stat-label">
+                Productos
+            </div>
+
+            <div class="stat-value" id="stockTotalProducts">
+                0
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="stat-card">
+
+        <div class="stat-icon" style="background:var(--gold-light);color:var(--gold)">
+            <i class="fas fa-arrow-down"></i>
+        </div>
+
+        <div>
+
+            <div class="stat-label">
+                Stock bajo
+            </div>
+
+            <div class="stat-value" id="stockLow">
+                0
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-icon" style="background:var(--danger-light);color:var(--danger)">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+
+        <div>
+
+            <div class="stat-label">
+                Agotados
+            </div>
+
+            <div class="stat-value" id="stockEmpty">
+                0
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+</div>
+
+
+
+<div class="toolbar">
+
+
+    <div class="search-box">
+
+        <i class="fas fa-search search-icon"></i>
+
+        <input id="stockSearch" placeholder="Buscar producto">
+
+    </div>
+
+
+
+    <select id="stockFilter">
+
+        <option value="">
+            Todos
+        </option>
+
+        <option value="low">
+            Stock bajo
+        </option>
+
+        <option value="empty">
+            Agotados
+        </option>
+
+    </select>
+
+
+</div>
+
+
+
+
+<div class="card">
+
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Producto
+                </th>
+
+                <th>
+                    Stock actual
+                </th>
+
+                <th>
+                    Estado
+                </th>
+
+                <th class="text-center">
+                    Acciones
+                </th>
+
+            </tr>
+
+        </thead>
+        <tbody id="stockTableBody">
+
+        </tbody>
+    </table>
+</div>
