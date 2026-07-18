@@ -205,7 +205,39 @@ const app = {
             }, 350);
 
         }, 3000);
-    }
+    },
+
+    validateRequiredFields: function (className) {
+
+        let valido = true;
+
+        document.querySelectorAll(`.${className}`).forEach(campo => {
+
+            if (!campo.value.trim()) {
+
+                campo.classList.add("input-error");
+
+                if (valido) {
+                    campo.focus();
+                }
+
+                valido = false;
+
+            } else {
+
+                campo.classList.remove("input-error");
+
+            }
+
+        });
+
+        if (!valido) {
+            app.showToast("Complete los campos obligatorios", "error");
+        }
+
+        return valido;
+
+    },
 };
 
 // Objeto para modales
@@ -241,7 +273,7 @@ const modals = {
             </button>
         `;
         container.appendChild(row);
-    }
+    },
 };
 
 // Inicializar app

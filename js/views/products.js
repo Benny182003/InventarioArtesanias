@@ -43,9 +43,7 @@ const productsView = {
             filterCategory.innerHTML =
                 '<option value="">Todas las categorías</option>' +
                 data.map(t =>
-                    `<option value="${t.id}">
-                    ${t.icono || '📦'} ${t.nombre}
-                </option>`
+                    `<option value="${t.id}">${t.nombre}</option>`        
                 ).join('');
         }
 
@@ -55,9 +53,7 @@ const productsView = {
             productCategory.innerHTML =
                 '<option value="">Selecciona una categoría</option>' +
                 data.map(t =>
-                    `<option value="${t.id}">
-                    ${t.icono || '📦'} ${t.nombre}
-                </option>`
+                    `<option value="${t.id}">${t.nombre}</option>`
                 ).join('');
         }
     },
@@ -70,7 +66,7 @@ const productsView = {
 
         const { data: products, error } = await window.supabase
             .from('articulo')
-            .select('*');
+            .select('*').order("nombre");
 
 
         if (error) {
@@ -79,64 +75,36 @@ const productsView = {
         }
 
 
-        // Obtener valores de filtros
-        const search = document
-            .getElementById('searchProducts')
-            ?.value
-            .toLowerCase()
-            .trim() || "";
-
-
-        const category = document
-            .getElementById('filterCategory')
-            ?.value || "";
-
-
-        const stockFilter = document
-            .getElementById('filterStock')
-            ?.value || "";
-
+        const search = document.getElementById('searchProducts')?.value.toLowerCase().trim() || "";
+        const category = document.getElementById('filterCategory')?.value || "";
+        const stockFilter = document.getElementById('filterStock')?.value || "";
 
         // Filtrar productos
         const filteredProducts = products.filter(product => {
 
-
             // Buscar por nombre
-            const matchSearch =
-                product.nombre
-                    .toLowerCase()
-                    .includes(search);
-
+            const matchSearch = product.nombre.toLowerCase().includes(search);
 
             // Filtrar categoría
-            const matchCategory =
-                category === "" ||
-                product.tipo_id == category;
-
+            const matchCategory = category === "" || product.tipo_id == category;
 
             // Filtrar stock
             let matchStock = true;
-
 
             if (stockFilter === "available") {
                 matchStock = product.stock > 0;
             }
 
-
             if (stockFilter === "low") {
                 matchStock = product.stock > 0 && product.stock <= 5;
             }
-
 
             if (stockFilter === "empty") {
                 matchStock = product.stock <= 0;
             }
 
-
             return matchSearch && matchCategory && matchStock;
         });
-
-
 
         if (!filteredProducts || filteredProducts.length === 0) {
 
@@ -147,51 +115,30 @@ const productsView = {
             return;
         }
 
-
         emptyState.style.display = 'none';
-
 
         tbody.innerHTML = filteredProducts.map(product => `
 
         <tr>
-
-            <td>
-                <i class="fas fa-${this.getProductIcon(product.tipo_id)}"></i>
-            </td>
-
-
             <td>
                 <strong>${product.nombre}</strong>
             </td>
-
-
             <td>
                 ${this.getCategoryName(product.tipo_id)}
             </td>
-
-
-            <td>
-                ${product.variantes ? 'Sí' : 'No'}
-            </td>
-
-
             <td>
                 ${product.stock || 0}
             </td>
-
-
+            <td>
+                ${product.stock_minimo || 0}
+            </td>
             <td>
                 $${product.precio?.toLocaleString()}
             </td>
-
-
             <td>
-                ${this.getStockBadge(product.stock)}
+                ${this.getStockBadge(product.stock, product.stock_minimo)}
             </td>
-
-
             <td>
-
                 <div class="table-actions">
 
                     <button
@@ -202,66 +149,43 @@ const productsView = {
                         <i class="fas fa-pen"></i>
 
                     </button>
-
-
                     <button
                         class="action-btn delete"
                         onclick="productsView.deleteProduct('${product.id}')"
                         title="Eliminar">
 
                         <i class="fas fa-trash-alt"></i>
-
                     </button>
-
                 </div>
-
             </td>
-
         </tr>
-
     `).join('');
-    },
-
-    getProductIcon: function (tipoId) {
-        const icons = {
-            1: 'tshirt',
-            2: 'ring',
-            3: 'paint-brush',
-            4: 'mask'
-        };
-        return icons[tipoId] || 'box';
     },
 
     getCategoryName: function (tipoId) {
         const types = window.cachedData?.types || [];
         const type = types.find(t => t.id === tipoId);
-        return type ? `${type.icono || '📦'} ${type.nombre}` : 'Sin categoría';
+        return type ? `${type.nombre}` : 'Sin categoría';
     },
 
-    getStockBadge: function (stock) {
+    getStockBadge: function (stock, stock_minimo) {
         if (stock <= 0) return '<span class="badge badge-danger"><i class="fas fa-times"></i> Sin stock</span>';
-        if (stock <= 5) return '<span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> Bajo</span>';
+        if (stock <= stock_minimo) return '<span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> Bajo</span>';
         return '<span class="badge badge-success"><i class="fas fa-check"></i> Normal</span>';
     },
 
     saveProduct: async function () {
+
+        if (!app.validateRequiredFields("validarProducto")) {
+            return;
+        }
 
         const nombre = document.getElementById("pName").value.trim();
         const categoria = document.getElementById("pCategory").value;
         const precio = Number(document.getElementById("pPrice").value || 0);
         const descripcion = document.getElementById("pDesc").value.trim();
         const stock = Number(document.getElementById("pStock").value || 0);
-        const codigo = document.getElementById("pSku").value.trim();
-
-        if (nombre === "") {
-            app.showToast("El nombre es requerido", "error");
-            return;
-        }
-
-        if (categoria === "") {
-            app.showToast("Seleccione una categoría", "error");
-            return;
-        }
+        const stock_minimo = document.getElementById("pStockMinimo").value.trim();
 
         const nombreDisponible = await this.validateProductName(
             nombre,
@@ -285,7 +209,7 @@ const productsView = {
                     precio,
                     descripcion,
                     stock,
-                    codigo
+                    stock_minimo
                 })
                 .eq("id", this.editingProductId));
         } else {
@@ -298,7 +222,7 @@ const productsView = {
                     precio,
                     descripcion,
                     stock,
-                    codigo
+                    stock_minimo
                 }]));
         }
 
@@ -314,7 +238,7 @@ const productsView = {
         document.getElementById("pPrice").value = "";
         document.getElementById("pDesc").value = "";
         document.getElementById("pStock").value = "0";
-        document.getElementById("pSku").value = "";
+        document.getElementById("pStockMinimo").value = "";
 
         await this.renderTable();
 
@@ -323,11 +247,7 @@ const productsView = {
         modals.close("productModal");
         this.editingProductId = null;
 
-        app.showToast(
-            wasEditing
-                ? "Producto actualizado correctamente"
-                : "Producto guardado correctamente"
-        );
+        app.showToast(wasEditing ? "Producto actualizado correctamente" : "Producto guardado correctamente");
     },
 
     editProduct: async function (id) {
@@ -349,7 +269,7 @@ const productsView = {
         document.getElementById("pPrice").value = data.precio;
         document.getElementById("pDesc").value = data.descripcion || "";
         document.getElementById("pStock").value = data.stock;
-        document.getElementById("pSku").value = data.codigo || "";
+        document.getElementById("pStockMinimo").value = data.stock_minimo || "";
 
         modals.open('productModal');
     },
@@ -382,7 +302,7 @@ const productsView = {
             app.showToast("No se pudo eliminar el producto.", "error")
             return;
         }
-        app.showToast("Producto eliminado correctamente.", "info")
+        app.showToast("Producto eliminado correctamente.")
         await this.renderTable();
     },
     validateProductName: async function (nombre, excludeId = null) {

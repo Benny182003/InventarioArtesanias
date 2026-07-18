@@ -35,13 +35,7 @@ const categoriesView = {
 
             <tr>
                 <td>
-                    <span class="tipo-color-bar"
-                    style="background:${cat.color || '#e8622a'}">
-                    </span>
-                </td>
-                <td>
                     <strong>
-                        ${cat.icono || '📦'}
                         ${cat.nombre}
                     </strong>
                 </td>

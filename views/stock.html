@@ -72,73 +72,73 @@
 
 </div>
 
+<div class="row g-4 mt-3">
 
+    <!-- Stock -->
+    <div class="col-lg-6">
 
-<div class="toolbar">
+        <div class="toolbar mb-3">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input id="stockSearch" placeholder="Buscar producto">
+            </div>
 
+            <select id="stockFilter">
+                <option value="">Todos</option>
+                <option value="low">Stock bajo</option>
+                <option value="empty">Agotados</option>
+            </select>
+        </div>
 
-    <div class="search-box">
+        <div class="card">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Stock</th>
+                            <th>Stock minimo</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
 
-        <i class="fas fa-search search-icon"></i>
+                    <tbody id="stockTableBody"></tbody>
 
-        <input id="stockSearch" placeholder="Buscar producto">
+                </table>
+            </div>
+        </div>
 
     </div>
 
+    <!-- Historial -->
+    <div class="col-lg-6">
 
+        <div class="card stock-card">
+            <div class="table-responsive">
 
-    <select id="stockFilter">
+                <table>
 
-        <option value="">
-            Todos
-        </option>
+                    <thead class="sticky-top bg-white">
 
-        <option value="low">
-            Stock bajo
-        </option>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Producto</th>
+                            <th>Tipo</th>
+                            <th>Cant.</th>
+                            <th>Motivo</th>
+                        </tr>
 
-        <option value="empty">
-            Agotados
-        </option>
+                    </thead>
 
-    </select>
+                    <tbody id="movementHistoryBody"></tbody>
 
+                </table>
 
-</div>
+            </div>
 
+        </div>
 
+    </div>
 
-
-<div class="card">
-
-
-    <table>
-
-        <thead>
-
-            <tr>
-
-                <th>
-                    Producto
-                </th>
-
-                <th>
-                    Stock actual
-                </th>
-
-                <th>
-                    Estado
-                </th>
-
-                <th class="text-center">
-                    Acciones
-                </th>
-
-            </tr>
-
-        </thead>
-        <tbody id="stockTableBody">
-
-        </tbody>
-    </table>
 </div>

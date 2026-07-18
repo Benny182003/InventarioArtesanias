@@ -1,81 +1,30 @@
 const stocksView = {
-
-
     currentProduct: null,
-
-
-
     init: function () {
-
         this.setupEvents();
-
         this.render();
-
-
     },
-
-
 
     setupEvents: function () {
-
-
-        document
-            .getElementById("stockSearch")
-            ?.addEventListener(
-                "input",
-                () => this.render()
-            );
-
-
-
-        document
-            .getElementById("stockFilter")
-            ?.addEventListener(
-                "change",
-                () => this.render()
-            );
-
-
-
+        document.getElementById("stockSearch")?.addEventListener("input", () => this.render());
+        document.getElementById("stockFilter")?.addEventListener("change", () => this.render());
     },
-
-
-
 
     render: async function () {
 
-
         const tbody =
-            document.getElementById(
-                "stockTableBody"
-            );
-
-
+            document.getElementById("stockTableBody");
 
         const { data, error } = await supabase
             .from("articulo")
-            .select("*");
-
-
+            .select("*").order("nombre");
 
         if (error) return;
 
-
-
         let products = data;
 
-
-
-        const search =
-            document.getElementById(
-                "stockSearch"
-            )?.value
-                .toLowerCase() || "";
-
-        const filter =
-            document.getElementById(
-                "stockFilter"
-            )?.value || "";
+        const search = document.getElementById("stockSearch")?.value.toLowerCase() || "";
+        const filter = document.getElementById("stockFilter")?.value || "";
 
         products =
             products.filter(p => {
@@ -95,91 +44,38 @@ const stocksView = {
         this.updateStats(data);
         tbody.innerHTML =
             products.map(p => `
+                <tr>
+                    <td>
+                        <strong>
+                        ${p.nombre}
+                        </strong>
+                    </td>
+                    <td>
+                        ${p.stock}
+                    </td>
+                    <td>
+                        ${p.stock_minimo}
+                    </td>
+                    <td>
+                        ${this.badge(p.stock)}
+                    </td>
+                    <td>
+                        <div class='table-actions'>
+                            <button class="action-btn edit" onclick="stocksView.open('${p.id}')">
+                                <i class="fas fa-plus-minus"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                `).join("");
 
-
-<tr>
-
-
-<td>
-
-<strong>
-${p.nombre}
-</strong>
-
-</td>
-
-
-<td>
-
-${p.stock}
-
-</td>
-
-
-<td>
-
-${this.badge(p.stock)}
-
-</td>
-
-
-
-<td>
-
-<div class='table-actions'>
-<button
-class="action-btn edit"
-
-onclick="stocksView.open('${p.id}')">
-
-<i class="fas fa-plus-minus"></i>
-
-</button>
-</div>
-
-
-
-</td>
-
-
-
-</tr>
-
-
-`).join("");
-
+        await this.loadHistory();
     },
 
-
-
-
     updateStats: function (products) {
-
-
-        document
-            .getElementById("stockTotalProducts")
-            .innerText =
-            products.length;
-
-
-
-        document
-            .getElementById("stockLow")
-            .innerText =
-            products.filter(
-                p => p.stock > 0 && p.stock <= 5
-            ).length;
-
-
-
-        document
-            .getElementById("stockEmpty")
-            .innerText =
-            products.filter(
-                p => p.stock <= 0
-            ).length;
-
-
+        document.getElementById("stockTotalProducts").innerText = products.length;
+        document.getElementById("stockLow").innerText = products.filter(p => p.stock > 0 && p.stock <= 5).length;
+        document.getElementById("stockEmpty").innerText = products.filter(p => p.stock <= 0).length;
     },
 
     badge: function (stock) {
@@ -204,101 +100,57 @@ onclick="stocksView.open('${p.id}')">
     },
 
     open: function (id) {
-
-
         this.currentProduct = id;
-
-
-
         supabase
             .from("articulo")
             .select("*")
             .eq("id", id)
             .single()
             .then(({ data }) => {
-
-
-                document
-                    .getElementById(
-                        "stockProductId"
-                    ).value = id;
-
-
-                document
-                    .getElementById(
-                        "stockProductName"
-                    ).value = data.nombre;
-
-
-
+                document.getElementById("stockProductId").value = id;
+                document.getElementById("stockProductName").value = data.nombre;
                 modals.open("stockModal");
-
-
             });
-
-
     },
-
 
     saveMovement: async function () {
 
-        const id =
-            document.getElementById(
-                "stockProductId"
-            ).value;
+        const id = document.getElementById("stockProductId").value;
+        const cantidad = Number(document.getElementById("stockQuantity").value);
+        const tipo = document.getElementById("stockType").value;
+        const motivo = document.getElementById("stockReason").value;
 
-
-
-        const cantidad =
-            Number(
-                document.getElementById(
-                    "stockQuantity"
-                ).value
-            );
-
-
-
-        const tipo =
-            document.getElementById(
-                "stockType"
-            ).value;
-
-
-
-        const motivo =
-            document.getElementById(
-                "stockReason"
-            ).value;
-
-
-
+        let nuevoStock;
         const { data: product } = await supabase
             .from("articulo")
             .select("stock")
             .eq("id", id)
             .single();
 
-        let nuevoStock;
-
-        if (tipo === "entrada")
-            nuevoStock =
-                product.stock + cantidad;
-
+        if (tipo === "0")
+            nuevoStock = product.stock + cantidad;
         else
-            nuevoStock =
-                product.stock - cantidad;
-
+            nuevoStock = product.stock - cantidad;
 
         if (nuevoStock < 0) {
-
-            app.showToast(
-                "No hay suficiente stock",
-                "error"
-            );
-
+            app.showToast("No hay suficiente stock", "error");
             return;
-
         }
+
+        const { data, error } = await supabase
+            .from("movimiento_stock")
+            .insert({
+                articulo_id: id,
+                tipo_movimiento: tipo,
+                cantidad,
+                motivo
+            });
+
+        if (error) {
+            app.showToast("No se pudo registrar el movimiento", "error");
+            return;
+        }
+
 
         await supabase
             .from("articulo")
@@ -307,31 +159,68 @@ onclick="stocksView.open('${p.id}')">
             })
             .eq("id", id);
 
-        await supabase
-            .from("movimiento_stock")
-            .insert({
-
-                articulo_id: id,
-
-                tipo,
-
-                cantidad,
-
-                stock_anterior: product.stock,
-
-                stock_nuevo: nuevoStock,
-
-                motivo
-
-            });
 
         modals.close("stockModal");
         this.render();
 
-        app.showToast(
-            "Movimiento registrado"
-        );
-    }
+        app.showToast("Movimiento registrado");
+    },
+
+    loadHistory: async function () {
+
+        const tbody = document.getElementById("movementHistoryBody");
+
+        const { data, error } = await supabase
+            .from("movimiento_stock")
+            .select(`
+            *,
+            articulo(nombre)
+        `)
+            .order("created_at", { ascending: false });
+
+        if (error) return;
+
+        tbody.innerHTML = data.map(m => `
+
+        <tr>
+
+            <td>
+                 ${new Date(m.created_at).toLocaleString("es-CO", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true
+                })}
+            </td>
+
+            <td>
+                ${m.articulo?.nombre ?? "-"}
+            </td>
+
+            <td>
+
+                ${m.tipo_movimiento == "0"
+                ? '<span class="badge badge-success">Entrada</span>'
+                : '<span class="badge badge-danger">Salida</span>'
+            }
+
+            </td>
+
+            <td>
+                ${m.cantidad}
+            </td>
+
+            <td>
+                ${m.motivo || "-"}
+            </td>
+
+        </tr>
+
+    `).join("");
+
+    },
 };
 
 app.views.stock = stocksView;
