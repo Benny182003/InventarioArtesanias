@@ -12,8 +12,7 @@ const stocksView = {
 
     render: async function () {
 
-        const tbody =
-            document.getElementById("stockTableBody");
+        const tbody = document.getElementById("stockTableBody");
 
         const { data, error } = await supabase
             .from("articulo")
@@ -33,8 +32,11 @@ const stocksView = {
                         .toLowerCase()
                         .includes(search);
 
+                if (filter === "available") {
+                    ok = ok && p.stock > 0;
+                }
                 if (filter === "low")
-                    ok = ok && p.stock > 0 && p.stock <= 5;
+                    ok = ok && p.stock > 0 && p.stock <= p.stock_minimo;
 
                 if (filter === "empty")
                     ok = ok && p.stock <= 0;
@@ -57,7 +59,7 @@ const stocksView = {
                         ${p.stock_minimo}
                     </td>
                     <td>
-                        ${this.badge(p.stock)}
+                        ${productsView.getStockBadge(p.stock, p.stock_minimo)}
                     </td>
                     <td>
                         <div class='table-actions'>
@@ -74,7 +76,7 @@ const stocksView = {
 
     updateStats: function (products) {
         document.getElementById("stockTotalProducts").innerText = products.length;
-        document.getElementById("stockLow").innerText = products.filter(p => p.stock > 0 && p.stock <= 5).length;
+        document.getElementById("stockLow").innerText = products.filter(p => p.stock > 0 && p.stock <= p.stock_minimo).length;
         document.getElementById("stockEmpty").innerText = products.filter(p => p.stock <= 0).length;
     },
 
@@ -119,6 +121,11 @@ const stocksView = {
         const cantidad = Number(document.getElementById("stockQuantity").value);
         const tipo = document.getElementById("stockType").value;
         const motivo = document.getElementById("stockReason").value;
+
+        if (cantidad <= 0) {
+            app.showToast("Ingrese una cantidad mayor a 0", "error");
+            return;
+        }
 
         let nuevoStock;
         const { data: product } = await supabase

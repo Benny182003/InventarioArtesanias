@@ -96,7 +96,7 @@ const productsView = {
             }
 
             if (stockFilter === "low") {
-                matchStock = product.stock > 0 && product.stock <= 5;
+                matchStock = product.stock > 0 && product.stock <= product.stock_minimo;
             }
 
             if (stockFilter === "empty") {
