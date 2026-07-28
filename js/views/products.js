@@ -25,15 +25,7 @@ const productsView = {
     },
 
     loadCategories: async function () {
-        const { data, error } = await window.supabase
-            .from('tipo')
-            .select('*');
-
-        if (error) {
-            console.error("Error cargando categorías:", error);
-            return;
-        }
-
+        const data = await categoryService.getAll();
         window.cachedData = window.cachedData || {};
         window.cachedData.types = data;
 
@@ -43,7 +35,7 @@ const productsView = {
             filterCategory.innerHTML =
                 '<option value="">Todas las categorías</option>' +
                 data.map(t =>
-                    `<option value="${t.id}">${t.nombre}</option>`        
+                    `<option value="${t.cod}">${t.nombre}</option>`
                 ).join('');
         }
 
@@ -53,7 +45,7 @@ const productsView = {
             productCategory.innerHTML =
                 '<option value="">Selecciona una categoría</option>' +
                 data.map(t =>
-                    `<option value="${t.id}">${t.nombre}</option>`
+                    `<option value="${t.cod}">${t.nombre}</option>`
                 ).join('');
         }
     },
@@ -62,31 +54,22 @@ const productsView = {
 
         const tbody = document.getElementById('productsTableBody');
         const emptyState = document.getElementById('productsEmpty');
-
-
-        const { data: products, error } = await window.supabase
-            .from('articulo')
-            .select('*').order("nombre");
-
-
-        if (error) {
-            console.error(error);
-            return;
-        }
-
+        const data = await productService.getAll();
+        // const tipoVariantes = await productService.obtenerTipoVariantes();
+        // const variantes = await productService.obtenerVariantes();
 
         const search = document.getElementById('searchProducts')?.value.toLowerCase().trim() || "";
         const category = document.getElementById('filterCategory')?.value || "";
         const stockFilter = document.getElementById('filterStock')?.value || "";
 
         // Filtrar productos
-        const filteredProducts = products.filter(product => {
+        const filteredProducts = data.filter(product => {
 
             // Buscar por nombre
             const matchSearch = product.nombre.toLowerCase().includes(search);
 
             // Filtrar categoría
-            const matchCategory = category === "" || product.tipo_id == category;
+            const matchCategory = category === "" || product.codcategoria == category;
 
             // Filtrar stock
             let matchStock = true;
@@ -124,7 +107,9 @@ const productsView = {
                 <strong>${product.nombre}</strong>
             </td>
             <td>
-                ${this.getCategoryName(product.tipo_id)}
+                ${this.getCategoryName(product.codcategoria)}
+            </td>
+            <td>
             </td>
             <td>
                 ${product.stock || 0}
@@ -143,7 +128,7 @@ const productsView = {
 
                     <button
                         class="action-btn edit"
-                        onclick="productsView.editProduct('${product.id}')"
+                        onclick="productsView.editProduct('${product.cod}')"
                         title="Editar">
 
                         <i class="fas fa-pen"></i>
@@ -151,7 +136,7 @@ const productsView = {
                     </button>
                     <button
                         class="action-btn delete"
-                        onclick="productsView.deleteProduct('${product.id}')"
+                        onclick="productsView.deleteProduct('${product.cod}')"
                         title="Eliminar">
 
                         <i class="fas fa-trash-alt"></i>
@@ -164,7 +149,7 @@ const productsView = {
 
     getCategoryName: function (tipoId) {
         const types = window.cachedData?.types || [];
-        const type = types.find(t => t.id === tipoId);
+        const type = types.find(t => t.cod === tipoId);
         return type ? `${type.nombre}` : 'Sin categoría';
     },
 
@@ -187,85 +172,60 @@ const productsView = {
         const stock = Number(document.getElementById("pStock").value || 0);
         const stock_minimo = document.getElementById("pStockMinimo").value.trim();
 
-        const nombreDisponible = await this.validateProductName(
-            nombre,
-            this.editingProductId
-        );
-
-        if (!nombreDisponible) {
+        const existe = await productService.existsByName(nombre, this.editingProductId);
+        if (existe) {
             app.showToast("Ya existe un producto con ese nombre", "error");
             return;
         }
 
-        let error;
+        try {
+            const values =
+            {
+                nombre,
+                codcategoria: categoria,
+                precio,
+                descripcion,
+                stock,
+                stock_minimo
+            }
 
-        if (this.editingProductId) {
+            if (this.editingProductId) {
+                await productService.update(this.editingProductId, values)
+            } else {
+                await productService.create(values)
+            }
 
-            ({ error } = await window.supabase
-                .from("articulo")
-                .update({
-                    nombre,
-                    tipo_id: categoria,
-                    precio,
-                    descripcion,
-                    stock,
-                    stock_minimo
-                })
-                .eq("id", this.editingProductId));
-        } else {
+            // Limpiar formulario
+            document.getElementById("pName").value = "";
+            document.getElementById("pCategory").value = "";
+            document.getElementById("pPrice").value = "";
+            document.getElementById("pDesc").value = "";
+            document.getElementById("pStock").value = "0";
+            document.getElementById("pStockMinimo").value = "";
 
-            ({ error } = await window.supabase
-                .from("articulo")
-                .insert([{
-                    nombre,
-                    tipo_id: categoria,
-                    precio,
-                    descripcion,
-                    stock,
-                    stock_minimo
-                }]));
-        }
+            await this.renderTable();
 
-        if (error) {
+            const wasEditing = this.editingProductId;
+
+            modals.close("productModal");
+            this.editingProductId = null;
+
+            app.showToast(wasEditing ? "Producto actualizado correctamente" : "Producto guardado correctamente");
+        } catch (error) {
+
             console.error(error);
             app.showToast(error.message, "error");
-            return;
         }
 
-        // Limpiar formulario
-        document.getElementById("pName").value = "";
-        document.getElementById("pCategory").value = "";
-        document.getElementById("pPrice").value = "";
-        document.getElementById("pDesc").value = "";
-        document.getElementById("pStock").value = "0";
-        document.getElementById("pStockMinimo").value = "";
-
-        await this.renderTable();
-
-        const wasEditing = this.editingProductId;
-
-        modals.close("productModal");
-        this.editingProductId = null;
-
-        app.showToast(wasEditing ? "Producto actualizado correctamente" : "Producto guardado correctamente");
     },
 
-    editProduct: async function (id) {
+    editProduct: async function (cod) {
 
-        const { data, error } = await window.supabase
-            .from("articulo")
-            .select("*")
-            .eq("id", id)
-            .single();
-
-        if (error) {
-            app.showToast(error.message, "error");
-            return;
-        }
-        this.editingProductId = id;
+        const data = await productService.getByCod(cod);
+        this.editingProductId = cod;
         document.getElementById("productModalTitle").innerHTML = 'Actualizar Producto';
         document.getElementById("pName").value = data.nombre;
-        document.getElementById("pCategory").value = data.tipo_id;
+        document.getElementById("pCategory").value = data.codcategoria;
         document.getElementById("pPrice").value = data.precio;
         document.getElementById("pDesc").value = data.descripcion || "";
         document.getElementById("pStock").value = data.stock;
@@ -273,7 +233,8 @@ const productsView = {
 
         modals.open('productModal');
     },
-    deleteProduct: async function (id) {
+
+    deleteProduct: async function (cod) {
 
         const result = await Swal.fire({
             title: "¿Eliminar producto?",
@@ -291,40 +252,9 @@ const productsView = {
             return;
         }
 
-
-        const { error } = await window.supabase
-            .from("articulo")
-            .delete()
-            .eq("id", id);
-
-        if (error) {
-            console.error(error);
-            app.showToast("No se pudo eliminar el producto.", "error")
-            return;
-        }
+        await productService.delete(cod);
         app.showToast("Producto eliminado correctamente.")
         await this.renderTable();
-    },
-    validateProductName: async function (nombre, excludeId = null) {
-
-        let query = window.supabase
-            .from("articulo")
-            .select("id")
-            .eq("nombre", nombre);
-
-        // Si estamos editando, ignorar el mismo registro
-        if (excludeId) {
-            query = query.neq("id", excludeId);
-        }
-
-        const { data, error } = await query;
-
-        if (error) {
-            console.error("Error validando nombre:", error);
-            return false;
-        }
-
-        return data.length === 0;
     },
 };
 

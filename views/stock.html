@@ -11,7 +11,7 @@
 
 <div class="stats-grid">
     <div class="stat-card">
-        <div class="stat-icon" style="background:var(--success-light);color:var(--success)">
+        <div class="stat-icon" style="background:var(--blue-light);color:var(--blue)">
             <i class="fas fa-box"></i>
         </div>
         <div>
@@ -22,67 +22,58 @@
             <div class="stat-value" id="stockTotalProducts">
                 0
             </div>
-
         </div>
-
     </div>
-
     <div class="stat-card">
-
+        <div class="stat-icon" style="background:var(--success-light);color:var(--success)">
+            <i class="fas fa-check"></i>
+        </div>
+        <div>
+            <div class="stat-label">
+                Stock Normal
+            </div>
+            <div class="stat-value" id="stockNormal">
+                0
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
         <div class="stat-icon" style="background:var(--gold-light);color:var(--gold)">
             <i class="fas fa-arrow-down"></i>
         </div>
-
         <div>
-
             <div class="stat-label">
                 Stock bajo
             </div>
-
             <div class="stat-value" id="stockLow">
                 0
             </div>
-
         </div>
-
     </div>
 
-
     <div class="stat-card">
-
         <div class="stat-icon" style="background:var(--danger-light);color:var(--danger)">
             <i class="fas fa-exclamation-triangle"></i>
         </div>
-
         <div>
-
             <div class="stat-label">
                 Agotados
             </div>
-
             <div class="stat-value" id="stockEmpty">
                 0
             </div>
-
         </div>
-
     </div>
-
-
-
 </div>
 
 <div class="row g-4 mt-3">
-
-    <!-- Stock -->
-    <div class="col-lg-6">
-
+    <div class="col-lg-12">
         <div class="toolbar mb-3">
             <div class="search-box">
                 <i class="fas fa-search search-icon"></i>
                 <input id="stockSearch" placeholder="Buscar producto">
             </div>
-
             <select id="stockFilter">
                 <option value="">Todos</option>
                 <option value="available">Disponible</option>
@@ -90,8 +81,7 @@
                 <option value="empty">Agotados</option>
             </select>
         </div>
-
-        <div class="card">
+        <div class="card stock-card">
             <div class="table-responsive">
                 <table>
                     <thead>
@@ -103,40 +93,9 @@
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
-
                     <tbody id="stockTableBody"></tbody>
-
                 </table>
             </div>
         </div>
-
     </div>
-
-    <!-- Historial -->
-    <div class="col-lg-6">
-
-        <div class="card stock-card">
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Producto</th>
-                            <th>Tipo</th>
-                            <th>Cant.</th>
-                            <th>Motivo</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="movementHistoryBody"></tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    </div>
-
 </div>

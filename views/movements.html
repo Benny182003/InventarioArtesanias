@@ -1,0 +1,53 @@
+<div class="view-header">
+
+    <div class="view-title">
+        <div class="view-icon">
+            <i class="fas fa-arrow-right-arrow-left"></i>
+        </div>
+
+        <div>
+            <h2>Movimientos</h2>
+        </div>
+    </div>
+
+    <div class="view-actions">
+
+        <div class="date-group">
+            <input type="date" id="txtFechaInicio">
+            <span>a</span>
+            <input type="date" id="txtFechaFin">
+        </div>
+
+        <button class="app-btn app-btn-primary" onclick="movementsView.loadHistory()">
+            <i class="fas fa-search"></i>
+            Consultar
+        </button>
+
+        <button class="app-btn app-btn-primary" onclick="movementsView.open()">
+            <i class="fas fa-plus"></i>
+            Nuevo
+        </button>
+
+    </div>
+
+</div>
+<div class="card">
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Producto</th>
+                    <th>Tipo</th>
+                    <th>Cantidad</th>
+                    <th>Motivo</th>
+                </tr>
+            </thead>
+            <tbody id="movementHistoryBody"></tbody>
+        </table>
+        <div id="movementsEmpty" class="empty-state" style="display:none">
+            <i class="fas fa-arrow-right-arrow-left"></i>
+            <span>No hay movimientos</span>
+        </div>
+    </div>
+</div>

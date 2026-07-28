@@ -1,40 +1,20 @@
-// js/app.js
 const app = {
     currentView: 'stock',
     views: {},
 
     init: async function () {
-        // Inicializar Supabase
-        this.initSupabase();
         const theme = localStorage.getItem("theme");
 
         if (theme === "dark") {
             document.body.setAttribute("data-theme", "dark");
-            document.getElementById("themeSwitch")?.classList.add("on");
         }
-        // Cargar componentes
+
         await this.loadComponent('sidebar', '/components/sidebar.html');
         await this.loadComponent('topbar', '/components/topbar.html');
         await this.loadComponent('modals', '/components/modals.html');
 
-        // Configurar event listeners
         this.setupEventListeners();
-
-        // Cargar vista inicial
         await this.loadView('stock');
-
-        // Cargar datos iniciales
-        this.loadInitialData();
-
-
-    },
-
-    initSupabase: function () {
-        const supabaseUrl = "https://lpfrvothrdgbelrashfw.supabase.co"
-        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwZnJ2b3RocmRnYmVscmFzaGZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NzgxODksImV4cCI6MjA5OTU1NDE4OX0.oz8GT_P8v1g5yAe2fSxIXzHLwZgLzwFjSPWzrD9YRY4"
-
-        this.supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-        window.supabase = this.supabase;
     },
 
     loadComponent: async function (containerId, url) {
@@ -150,15 +130,15 @@ const app = {
         localStorage.setItem("theme", isDark ? "light" : "dark");
     },
 
-    loadInitialData: async function () {
-        try {
-            const { data: types } = await this.supabase.from('tipo').select('*');
-            window.cachedData = window.cachedData || {};
-            window.cachedData.types = types;
-        } catch (error) {
-            console.error('Error cargando datos iniciales:', error);
-        }
-    },
+    // loadInitialData: async function () {
+    //     try {
+    //         window.cachedData = window.cachedData || {};
+    //         window.cachedData.types = categoryService.getAll();
+    //         window.cachedData.products = productService.getAll();
+    //     } catch (error) {
+    //         console.error('Error cargando datos iniciales:', error);
+    //     }
+    // },
 
     showToast: function (message, type = 'success') {
 
@@ -212,23 +192,16 @@ const app = {
         let valido = true;
 
         document.querySelectorAll(`.${className}`).forEach(campo => {
-
             if (!campo.value.trim()) {
-
                 campo.classList.add("input-error");
-
+                console.log(campo);
                 if (valido) {
                     campo.focus();
                 }
-
                 valido = false;
-
             } else {
-
                 campo.classList.remove("input-error");
-
             }
-
         });
 
         if (!valido) {
@@ -238,6 +211,16 @@ const app = {
         return valido;
 
     },
+
+    getCurrentDate: function () {
+        const d = new Date();
+
+        return [
+            d.getFullYear(),
+            String(d.getMonth() + 1).padStart(2, "0"),
+            String(d.getDate()).padStart(2, "0")
+        ].join("-");
+    }
 };
 
 // Objeto para modales

@@ -15,17 +15,9 @@ const categoriesView = {
 
         const tbody = document.getElementById("categoriesTableBody");
         const empty = document.getElementById("categoriesEmpty");
-        const { data, error } = await window.supabase
-            .from("tipo")
-            .select("*")
-            .order("id");
-        if (error) {
-            console.error(error);
-            return;
-        }
+        const data = await categoryService.getAll();
 
         if (!data || data.length === 0) {
-
             tbody.innerHTML = "";
             empty.style.display = "flex";
             return;
@@ -41,23 +33,27 @@ const categoriesView = {
                 </td>
                 <td>
                     ${cat.descripcion || '-'}
-                </td>
+                </td>  
+                  <td>
+                    ${cat.maneja_variantes
+                        ? '<span class="badge badge-success">Si</span>'
+                        : '<span class="badge badge-danger">No</span>'
+                    }
+                </td>  
                 <td>
-                    ${cat.created_at
-                ? new Date(cat.created_at).toLocaleDateString()
-                : '-'}
+                    ${cat.created_at ? new Date(cat.created_at).toLocaleDateString() : '-'}
                 </td>
                 <td>
                     <div class="table-actions">
                         <button
                             class="action-btn edit"
-                            onclick="categoriesView.editCategory('${cat.id}')">
+                            onclick="categoriesView.editCategory('${cat.cod}')">
 
                             <i class="fas fa-pen"></i>
                         </button>
                         <button
                             class="action-btn delete"
-                            onclick="categoriesView.deleteCategory('${cat.id}')">
+                            onclick="categoriesView.deleteCategory('${cat.cod}')">
 
                             <i class="fas fa-trash"></i>
                         </button>
@@ -68,136 +64,75 @@ const categoriesView = {
     },
 
     saveCategory: async function () {
-        const nombre = document
-            .getElementById("cName")
-            .value
-            .trim();
+
+        const nombre = document.getElementById("cName").value.trim();
+        const maneja_variantes = document.getElementById("cHasVariants").checked;
 
         if (nombre === "") {
-            app.showToast(
-                "El nombre es requerido",
-                "error"
-            );
+            app.showToast("El nombre es requerido", "error");
             return;
         }
 
-        const disponible = await this.validateCategoryName(
-            nombre,
-            this.editingCategoryId
-        );
-
-        if (!disponible) {
-
-            app.showToast(
-                "Ya existe una categoría con ese nombre",
-                "error"
-            );
-
+        const existe = await categoryService.existsByName(nombre, this.editingCategoryId);
+        if (existe) {
+            app.showToast("Ya existe una categoría con ese nombre", "error");
             return;
         }
-        let error;
-        if (this.editingCategoryId) {
-            ({ error } = await window.supabase
-                .from("tipo")
-                .update({
-                    nombre
-                })
-                .eq(
-                    "id",
-                    this.editingCategoryId
-                ));
 
-        } else {
-            ({ error } = await window.supabase
-                .from("tipo")
-                .insert([{
-                    nombre
-                }]));
-        }
+        try {
 
-        if (error) {
+            if (this.editingCategoryId) {
+                await categoryService.update(this.editingCategoryId, { nombre, maneja_variantes });
+            } else {
+                await categoryService.create({ nombre });
+            }
+
+            modals.close("categoryModal");
+
+            const editando = this.editingCategoryId;
+            this.editingCategoryId = null;
+
+            this.clearForm();
+            await this.renderTable();
+
+            app.showToast(editando ? "Categoría actualizada" : "Categoría creada");
+
+        } catch (error) {
             console.error(error);
-
-            app.showToast(
-                error.message,
-                "error"
-            );
-            return;
+            app.showToast(error.message, "error");
         }
-        modals.close("categoryModal");
-        const editando = this.editingCategoryId;
-        this.editingCategoryId = null;
-        this.clearForm();
-        await this.renderTable();
-        app.showToast(
-            editando
-                ? "Categoría actualizada"
-                : "Categoría creada"
-        );
     },
 
-    editCategory: async function (id) {
-
-        const { data, error } = await window.supabase
-            .from("tipo")
-            .select("*")
-            .eq("id", id)
-            .single();
-
-        if (error) {
-            app.showToast(
-                error.message,
-                "error"
-            );
-            return;
-        }
-
-        this.editingCategoryId = id;
-
+    editCategory: async function (cod) {
+        const data = await categoryService.getByCod(cod);
+        this.editingCategoryId = cod;
         document.getElementById("categoryModalTitle").innerHTML = "Actualizar categoría";
         document.getElementById("cName").value = data.nombre || "";
+        document.getElementById("cHasVariants").checked = data.maneja_variantes;
         modals.open("categoryModal");
     },
 
+    deleteCategory: async function (cod) {
+        const result = await Swal.fire({
+            title: "¿Eliminar categoria?",
+            text: "Esta acción no se puede deshacer.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#e74c3c",
+            cancelButtonColor: "#7f8c8d",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        });
 
-
-    deleteCategory: async function (id) {
-        if (!confirm("¿Eliminar categoría?"))
-            return;
-        const { error } = await window.supabase
-            .from("tipo")
-            .delete()
-            .eq("id", id);
-        if (error) {
-            app.showToast(
-                error.message,
-                "error"
-            );
+        if (!result.isConfirmed) {
             return;
         }
+
+        await categoryService.delete(cod);
         await this.renderTable();
-        app.showToast(
-            "Categoría eliminada"
-        );
+        app.showToast("Categoría eliminada correctamente");
     },
 
-    validateCategoryName: async function (nombre, id = null) {
-        let query = window.supabase
-            .from("tipo")
-            .select("id")
-            .eq("nombre", nombre);
-        if (id) {
-            query = query.neq(
-                "id",
-                id
-            );
-        }
-        const { data, error } = await query;
-        if (error)
-            return false;
-
-        return data.length === 0;
-    },
     clearForm: function () {
         document.getElementById("cName").value = "";
     }
