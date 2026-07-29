@@ -82,5 +82,25 @@ const supabaseService = {
 
         return data;
     },
-    
+
+    async getProducts() {
+        const { data, error } = await supabaseClient
+            .from("producto")
+            .select(`
+                *,
+                categoria(nombre),
+                variante(
+                    nombre,
+                    orden
+                )
+            `)
+            .order("nombre");
+
+        if (error) {
+            console.error(error);
+            throw error;
+        }
+
+        return data;
+    }
 };

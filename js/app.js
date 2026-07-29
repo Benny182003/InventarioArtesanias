@@ -130,16 +130,6 @@ const app = {
         localStorage.setItem("theme", isDark ? "light" : "dark");
     },
 
-    // loadInitialData: async function () {
-    //     try {
-    //         window.cachedData = window.cachedData || {};
-    //         window.cachedData.types = categoryService.getAll();
-    //         window.cachedData.products = productService.getAll();
-    //     } catch (error) {
-    //         console.error('Error cargando datos iniciales:', error);
-    //     }
-    // },
-
     showToast: function (message, type = 'success') {
 
         const container = document.getElementById('toastContainer');

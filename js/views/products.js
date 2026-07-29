@@ -5,10 +5,35 @@ const productsView = {
         this.loadCategories();
         this.setupEventListeners();
         this.renderTable();
+        this.cargarVariantes("filtroVariante");
+    },
+
+    cargarVariantes: async function (id) {
+        try {
+            const data = await productService.obtenerVariantes();
+            const dropFiltroVariante = document.getElementById(id);
+
+            if (dropFiltroVariante) {
+                dropFiltroVariante.innerHTML =
+                    '<option value="">Todas las variantes</option>' +
+                    data.map(p => `<option value="${p.cod}">${p.nombre}</option>`).join('');
+            }
+
+            const pVariante = document.getElementById("pVariante");
+
+            if (pVariante) {
+                pVariante.innerHTML =
+                    '<option value="">Seleccione una variante</option>' +
+                    data.map(p => `<option value="${p.cod}">${p.nombre}</option>`).join('');
+            }
+
+        } catch (error) {
+            console.error("Error cargando filtro de variantes:", error);
+        }
     },
 
     openAddProduct: function () {
-        productsView.editingProductId = null;
+        this.cleanForm();
 
         document.getElementById("productModalTitle").innerHTML = 'Nuevo Producto';
         modals.open('productModal');
@@ -18,17 +43,16 @@ const productsView = {
         const searchInput = document.getElementById('searchProducts');
         const filterCategory = document.getElementById('filterCategory');
         const filterStock = document.getElementById('filterStock');
+        const filtroVariante = document.getElementById('filtroVariante');
 
         searchInput?.addEventListener('input', () => this.renderTable());
         filterCategory?.addEventListener('change', () => this.renderTable());
         filterStock?.addEventListener('change', () => this.renderTable());
+        filtroVariante?.addEventListener('change', () => this.renderTable());
     },
 
     loadCategories: async function () {
         const data = await categoryService.getAll();
-        window.cachedData = window.cachedData || {};
-        window.cachedData.types = data;
-
         const filterCategory = document.getElementById('filterCategory');
 
         if (filterCategory) {
@@ -55,12 +79,12 @@ const productsView = {
         const tbody = document.getElementById('productsTableBody');
         const emptyState = document.getElementById('productsEmpty');
         const data = await productService.getAll();
-        // const tipoVariantes = await productService.obtenerTipoVariantes();
-        // const variantes = await productService.obtenerVariantes();
+
 
         const search = document.getElementById('searchProducts')?.value.toLowerCase().trim() || "";
         const category = document.getElementById('filterCategory')?.value || "";
         const stockFilter = document.getElementById('filterStock')?.value || "";
+        const variante = document.getElementById('filtroVariante')?.value || "";
 
         // Filtrar productos
         const filteredProducts = data.filter(product => {
@@ -86,7 +110,12 @@ const productsView = {
                 matchStock = product.stock <= 0;
             }
 
-            return matchSearch && matchCategory && matchStock;
+            let matchVariante = true;
+
+            if (variante !== "")
+                matchVariante = Number(variante) === product.codvariante;
+
+            return matchSearch && matchCategory && matchStock && matchVariante;
         });
 
         if (!filteredProducts || filteredProducts.length === 0) {
@@ -107,9 +136,10 @@ const productsView = {
                 <strong>${product.nombre}</strong>
             </td>
             <td>
-                ${this.getCategoryName(product.codcategoria)}
+                ${product.categoria.nombre}
             </td>
             <td>
+                ${product.variante ? `${product.variante.nombre}` : ""}
             </td>
             <td>
                 ${product.stock || 0}
@@ -147,12 +177,6 @@ const productsView = {
     `).join('');
     },
 
-    getCategoryName: function (tipoId) {
-        const types = window.cachedData?.types || [];
-        const type = types.find(t => t.cod === tipoId);
-        return type ? `${type.nombre}` : 'Sin categoría';
-    },
-
     getStockBadge: function (stock, stock_minimo) {
         if (stock <= 0) return '<span class="badge badge-danger"><i class="fas fa-times"></i> Sin stock</span>';
         if (stock <= stock_minimo) return '<span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> Bajo</span>';
@@ -171,6 +195,7 @@ const productsView = {
         const descripcion = document.getElementById("pDesc").value.trim();
         const stock = Number(document.getElementById("pStock").value || 0);
         const stock_minimo = document.getElementById("pStockMinimo").value.trim();
+        const codvariante = document.getElementById("pVariante").value.trim() || null;
 
         const existe = await productService.existsByName(nombre, this.editingProductId);
         if (existe) {
@@ -186,7 +211,8 @@ const productsView = {
                 precio,
                 descripcion,
                 stock,
-                stock_minimo
+                stock_minimo,
+                codvariante
             }
 
             if (this.editingProductId) {
@@ -195,21 +221,12 @@ const productsView = {
                 await productService.create(values)
             }
 
-            // Limpiar formulario
-            document.getElementById("pName").value = "";
-            document.getElementById("pCategory").value = "";
-            document.getElementById("pPrice").value = "";
-            document.getElementById("pDesc").value = "";
-            document.getElementById("pStock").value = "0";
-            document.getElementById("pStockMinimo").value = "";
-
             await this.renderTable();
 
             const wasEditing = this.editingProductId;
 
+            this.cleanForm();
             modals.close("productModal");
-            this.editingProductId = null;
-
             app.showToast(wasEditing ? "Producto actualizado correctamente" : "Producto guardado correctamente");
         } catch (error) {
 
@@ -218,6 +235,7 @@ const productsView = {
         }
 
     },
+
 
     editProduct: async function (cod) {
 
@@ -230,6 +248,7 @@ const productsView = {
         document.getElementById("pDesc").value = data.descripcion || "";
         document.getElementById("pStock").value = data.stock;
         document.getElementById("pStockMinimo").value = data.stock_minimo || "";
+        document.getElementById("pVariante").value = data.codvariante || "";
 
         modals.open('productModal');
     },
@@ -256,6 +275,17 @@ const productsView = {
         app.showToast("Producto eliminado correctamente.")
         await this.renderTable();
     },
+
+    cleanForm: function () {
+        this.editingProductId = null;
+        document.getElementById("pName").value = "";
+        document.getElementById("pCategory").value = "";
+        document.getElementById("pPrice").value = "";
+        document.getElementById("pDesc").value = "";
+        document.getElementById("pStock").value = "0";
+        document.getElementById("pStockMinimo").value = "";
+        document.getElementById("pVariante").value = "";
+    }
 };
 
 // Registrar la vista

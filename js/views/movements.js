@@ -77,14 +77,28 @@ const movementsView = {
     loadHistory: async function () {
 
         const tbody = document.getElementById("movementHistoryBody");
+        const emptyState = document.getElementById('movementsEmpty');
 
         const fechaInicio = document.getElementById("txtFechaInicio").value;
         const fechaFin = document.getElementById("txtFechaFin").value;
 
+        if(new Date(fechaInicio) > new Date(fechaFin)){
+            app.showToast("La fecha inicio no puede ser mayor a la fecha final", "error");
+        }
+
         try {
 
             const data = await movementService.getAll(fechaInicio, fechaFin);
+            if (!data || data.length === 0) {
 
+                tbody.innerHTML = '';
+
+                emptyState.style.display = 'flex';
+
+                return;
+            }
+
+            emptyState.style.display = 'none';
             tbody.innerHTML = data.map(m => `
             <tr>
                 <td>

@@ -10,38 +10,40 @@
             </div>
 
             <div class="modal-body">
-
-                <div class="form-grid">
-                    <div class="form-group span-2">
+                <div class="row g-3">
+                    <div class="form-group col-12">
                         <label>Nombre del producto *</label>
                         <input type="text" id="pName" class="validarProducto">
                     </div>
-
-                    <div class="form-group">
+                    <div class="form-group col-md-6">
                         <label>Categoría *</label>
                         <select id="pCategory" class="validarProducto">
                             <option value="">Selecciona una categoría</option>
                         </select>
                     </div>
-
-                    <div class="form-group">
+                    <div class="form-group col-md-6">
+                        <label>Variante</label>
+                        <select id="pVariante">
+                            <option value="">Sin variante</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
                         <label>Precio base *</label>
                         <input type="number" id="pPrice" class="validarProducto">
                     </div>
-
-                    <div class="form-group span-2">
-                        <label>Descripción</label>
-                        <textarea id="pDesc" rows="3"></textarea>
-                    </div>
-
-                    <div class="form-group">
+                    
+                    <div class="form-group col-md-4">
                         <label>Stock inicial</label>
                         <input type="number" id="pStock" value="0" class="validarProducto">
                     </div>
 
-                    <div class="form-group">
-                        <label>Stock minimo</label>
+                    <div class="form-group col-md-4">
+                        <label>Stock mínimo</label>
                         <input type="number" id="pStockMinimo" value="1" class="validarProducto">
+                    </div>
+                    <div class="form-group col-12">
+                        <label>Descripción</label>
+                        <textarea id="pDesc" rows="3"></textarea>
                     </div>
                 </div>
             </div>

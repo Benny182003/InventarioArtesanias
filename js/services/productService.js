@@ -1,8 +1,15 @@
 const productService = {
-    async getAll(order) {
-        const productos = await supabaseService.getAll("producto", order);
+    async getAll() {
+        const productos = await supabaseService.getProducts();
 
-        return productos.filter(p => p.visible === true);
+        productos.sort((a, b) => {
+            const ordenA = a.variante?.orden ?? Number.MAX_SAFE_INTEGER;
+            const ordenB = b.variante?.orden ?? Number.MAX_SAFE_INTEGER;
+
+            return ordenA - ordenB;
+        });
+
+        return productos.filter(p => p.visible);
     },
 
     async getByCod(cod) {
@@ -25,11 +32,7 @@ const productService = {
         return supabaseService.delete("producto", cod);
     },
 
-    async obtenerTipoVariantes() {
-        return supabaseService.getAll("tipo_variante");
-    },
-
     async obtenerVariantes() {
-        return supabaseService.getAll("variante");
+        return supabaseService.getAll("variante", "orden");
     },
 };

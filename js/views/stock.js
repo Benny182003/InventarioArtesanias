@@ -3,13 +3,14 @@ const stocksView = {
         this.setupEvents();
         this.render();
         this.loadProducts();
+        productsView.cargarVariantes("dropFiltroVariante");
     },
 
     loadProducts: async function () {
         try {
             const data = await productService.getAll();
             const dropProducto = document.getElementById("dropProducto");
-            
+
             if (dropProducto) {
                 dropProducto.innerHTML =
                     '<option value="">Selecciona un producto</option>' +
@@ -24,8 +25,9 @@ const stocksView = {
     setupEvents: function () {
         document.getElementById("stockSearch")?.addEventListener("input", () => this.render());
         document.getElementById("stockFilter")?.addEventListener("change", () => this.render());
+        document.getElementById("dropFiltroVariante")?.addEventListener("change", () => this.render());
     },
- 
+
     render: async function () {
 
         const tbody = document.getElementById("stockTableBody");
@@ -36,9 +38,9 @@ const stocksView = {
 
             const search = document.getElementById("stockSearch")?.value.toLowerCase() || "";
             const filter = document.getElementById("stockFilter")?.value || "";
+            const variante = document.getElementById("dropFiltroVariante")?.value || "";
 
             const products = data.filter(p => {
-
                 let ok = p.nombre.toLowerCase().includes(search);
 
                 if (filter === "available")
@@ -50,8 +52,10 @@ const stocksView = {
                 if (filter === "empty")
                     ok = ok && p.stock <= 0;
 
-                return ok;
+                if (variante !== "")
+                    ok = ok && Number(variante) === p.codvariante;
 
+                return ok;
             });
 
             this.updateStats(data);
@@ -59,6 +63,7 @@ const stocksView = {
             tbody.innerHTML = products.map(p => `
             <tr>
                 <td><strong>${p.nombre}</strong></td>
+                <td>${p.variante ? `${p.variante.nombre}` : ""}</td>
                 <td>${p.stock}</td>
                 <td>${p.stock_minimo}</td>
                 <td>${productsView.getStockBadge(p.stock, p.stock_minimo)}</td>
@@ -71,12 +76,12 @@ const stocksView = {
                     </div>
                 </td>
             </tr>`).join("");
-            
+
         } catch (error) {
             console.error(error);
             app.showToast("Error al cargar los productos", "error");
         }
-    }, 
+    },
 
     updateStats: function (products) {
         document.getElementById("stockTotalProducts").innerText = products.length;
